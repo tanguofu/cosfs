@@ -264,8 +264,8 @@ void CurlHandlerPool::ReturnHandler(CURL* h)
 
 #define	RAM_EXPIRE_MERGIN           (20 * 60)         // update timming
 #define	RAM_CRED_URL                ""
-#define RAMCRED_ACCESSKEYID         "AccessKeyId"
-#define RAMCRED_SECRETACCESSKEY     "SecretAccessKey"
+#define RAMCRED_ACCESSKEYID         "TmpSecretId"
+#define RAMCRED_SECRETACCESSKEY     "TmpSecretKey"
 #define RAMCRED_ACCESSTOKEN         "Token"
 #define RAMCRED_EXPIRATION          "Expiration"
 #define RAMCRED_KEYCOUNT            4
@@ -300,6 +300,7 @@ string           S3fsCurl::COSAccessKeyId;
 string           S3fsCurl::COSSecretAccessKey;
 string           S3fsCurl::COSAccessToken;
 time_t           S3fsCurl::COSAccessTokenExpire= 0;
+string           S3fsCurl::TmpCredentialsUrl;
 string           S3fsCurl::CAM_role;
 long             S3fsCurl::ssl_verify_hostname = 1;    // default(original code...)
 curltime_t       S3fsCurl::curl_times;
@@ -1071,15 +1072,23 @@ bool S3fsCurl::checkSTSCredentialUpdate(void) {
         return true;
     }
 
-    if (time(NULL) <= S3fsCurl::COSAccessTokenExpire) {
+    if (time(NULL) + RAM_EXPIRE_MERGIN <= S3fsCurl::COSAccessTokenExpire) {
         return true;
     }
 
    // if return value is not equal 1, means wrong format key
-   if (check_for_cos_format() != 1) {
+   if (S3fsCurl::TmpCredentialsUrl.size() == 0 && check_for_cos_format() != 1) {
        return false;
+   } 
+   
+   // update by tmp credentials url   
+   if (S3fsCurl::TmpCredentialsUrl.size() > 0) {      
+      S3fsCurl s3fscurl;
+      if(0 != s3fscurl.GetRAMCredentials()){
+          return false;
+      }
    }
-
+   
    return true;
 }
 
@@ -1114,6 +1123,13 @@ string S3fsCurl::SetCAMRole(const char* role)
 {
   string old = S3fsCurl::CAM_role;
   S3fsCurl::CAM_role = role ? role : "";
+  return old;
+}
+
+string S3fsCurl::SetTmpCredentialsUrl(const char* url)
+{
+  string old = S3fsCurl::TmpCredentialsUrl;
+  S3fsCurl::TmpCredentialsUrl = url;
   return old;
 }
 
@@ -2188,20 +2204,23 @@ int S3fsCurl::GetRAMCredentials(void)
   }
 
   // url
-  url             = string(RAM_CRED_URL) + S3fsCurl::CAM_role;
+  // url             = string(RAM_CRED_URL) + S3fsCurl::CAM_role;
   requestHeaders  = NULL;
   responseHeaders.clear();
   bodydata        = new BodyData();
 
-  curl_easy_setopt(hCurl, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(hCurl, CURLOPT_URL, S3fsCurl::TmpCredentialsUrl.c_str());
   curl_easy_setopt(hCurl, CURLOPT_WRITEDATA, (void*)bodydata);
   curl_easy_setopt(hCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 
   int result = RequestPerform();
 
+  if (result != 0){
+    S3FS_PRN_ERR("GetRAMCredentials url=%s, result=%d, body=%s", S3fsCurl::TmpCredentialsUrl.c_str(), result, bodydata->str());
+  }
   // analizing response
   if(0 == result && !S3fsCurl::SetRAMCredentials(bodydata->str())){
-    S3FS_PRN_ERR("Something error occurred, could not get RAM credential.");
+    S3FS_PRN_ERR("Something error occurred, url=%s, result=%d, body=%s", S3fsCurl::TmpCredentialsUrl.c_str(), result, bodydata->str());
   }
   delete bodydata;
   bodydata = NULL;

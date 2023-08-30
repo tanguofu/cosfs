@@ -229,6 +229,7 @@ class S3fsCurl
     static std::string      COSAccessToken;
     static time_t           COSAccessTokenExpire;
     static std::string      CAM_role;
+    static std::string      TmpCredentialsUrl;
     static long             ssl_verify_hostname;
     static curltime_t       curl_times;
     static curlprogress_t   curl_progress;
@@ -308,8 +309,6 @@ class S3fsCurl
     bool ClearInternalData(void);
     std::string CalcSignature(std::string method, std::string strMD5, std::string content_type, std::string date, std::string resource);
     bool GetUploadId(std::string& upload_id);
-    int GetRAMCredentials(void);
-
     int UploadMultipartPostSetup(const char* tpath, int part_num, std::string& upload_id);
     int CopyMultipartPostRequest(const char* from, const char* to, int part_num, std::string& upload_id, headers_t& meta);
 
@@ -366,6 +365,8 @@ class S3fsCurl
     static int GetMaxParallelCount(void) { return S3fsCurl::max_parallel_cnt; }
     static std::string SetCAMRole(const char* role);
     static const char* GetRAMRole(void) { return S3fsCurl::CAM_role.c_str(); }
+    static std::string SetTmpCredentialsUrl(const char* url);
+    static std::string GetTmpCredentialsUrl(void) { return S3fsCurl::TmpCredentialsUrl;}
     static bool SetMultipartSize(off_t size);
     static off_t GetMultipartSize(void) { return S3fsCurl::multipart_size; }
     static bool SetSignatureV4(bool isset) { bool bresult = S3fsCurl::is_sigv4; S3fsCurl::is_sigv4 = isset; return bresult; }
@@ -418,6 +419,7 @@ class S3fsCurl
     void SetMultipartRetryCount(int retrycnt) { retry_count = retrycnt; }
     bool IsOverMultipartRetryCount(void) const { return (retry_count >= S3fsCurl::retries); }
     int GetLastPreHeadSeecKeyPos(void) const { return b_ssekey_pos; }
+    int GetRAMCredentials(void);
 };
 
 //----------------------------------------------

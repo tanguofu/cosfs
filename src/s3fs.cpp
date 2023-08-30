@@ -4412,6 +4412,14 @@ static int get_access_keys(void)
   }else{
     S3FS_PRN_EXIT("COS_CREDENTIAL_FILE: \"%s\" is not readable.", passwd_file.c_str());
   }
+  
+  // 6 - from the tmp credential url
+  if (S3fsCurl::GetTmpCredentialsUrl().size() > 0) {
+      S3fsCurl s3fscurl;
+      if(0 == s3fscurl.GetRAMCredentials()){
+          return EXIT_SUCCESS;
+      }
+  }
 
   return EXIT_FAILURE;
 }
@@ -4816,11 +4824,19 @@ static int my_fuse_opt_proc(void* data, const char* arg, int key, struct fuse_ar
       passwd_file = strchr(arg, '=') + sizeof(char);
       return 0;
     }
+
+    if(0 == STR2NCMP(arg, "tmp_credentials_url=")){
+      const char* url = strchr(arg, '=') + sizeof(char);
+      S3fsCurl::SetTmpCredentialsUrl(url);  
+      return 0;
+    }
+
     if(0 == STR2NCMP(arg, "cam_role=")){
       const char* role = strchr(arg, '=') + sizeof(char);
       S3fsCurl::SetCAMRole(role);
       return 0;
     }
+
     if(0 == STR2NCMP(arg, "public_bucket=")){
       off_t pubbucket = s3fs_strtoofft(strchr(arg, '=') + sizeof(char));
       if(1 == pubbucket){
