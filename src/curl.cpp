@@ -1162,7 +1162,7 @@ bool S3fsCurl::UploadMultipartPostCallback(S3fsCurl* s3fscurl)
   // }
   S3FS_PRN_ERR("headdata is : %s", s3fscurl->headdata->str());
   string header_str(s3fscurl->headdata->str(), s3fscurl->headdata->size());
-  int pos = header_str.find("ETag: \"");
+  size_t pos = header_str.find("ETag: \"");
   if (pos != std::string::npos) {
       if (header_str.at(pos+39) != '"') {
           // sha1
@@ -1393,44 +1393,73 @@ int S3fsCurl::ParallelGetObjectRequest(const char* tpath, int fd, off_t start, s
   return result;
 }
 
+
+std::vector<string> split(const char* response,  const string& delims){
+
+  std::vector<string> tokens;
+  std::string token;
+ 
+  for (; *response != '\0' ; response++) {
+    char c = *response;
+    if (delims.find(c) != string::npos) {
+        if (!token.empty()) {
+            tokens.push_back(token);
+            token.clear();
+        }
+    } else {
+        token += c;
+    }
+  }
+
+  if (!token.empty()) {
+      tokens.push_back(token);
+  }
+
+  return tokens;
+}
+
 bool S3fsCurl::ParseRAMCredentialResponse(const char* response, ramcredmap_t& keyval)
 {
   if(!response){
     return false;
   }
-  istringstream sscred(response);
-  string        oneline;
-  keyval.clear();
-  while(getline(sscred, oneline, '\n')){
-    string::size_type pos;
-    string            key;
-    string            val;
-    if(string::npos != (pos = oneline.find(RAMCRED_ACCESSKEYID))){
-      key = RAMCRED_ACCESSKEYID;
-    }else if(string::npos != (pos = oneline.find(RAMCRED_SECRETACCESSKEY))){
-      key = RAMCRED_SECRETACCESSKEY;
-    }else if(string::npos != (pos = oneline.find(RAMCRED_ACCESSTOKEN))){
-      key = RAMCRED_ACCESSTOKEN;
-    }else if(string::npos != (pos = oneline.find(RAMCRED_EXPIRATION))){
-      key = RAMCRED_EXPIRATION;
-    }else{
+  
+  std::vector<std::string> tokens = split(response, ",{}");
+  for ( std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+    std::string token = *it;
+    char key[256], value[1024];
+    int stamp;
+
+    if (sscanf(token.c_str(), "\"%[^\"]\":\"%[^\"]\"", key, value) == 2) {
+      keyval[std::string(key)]=std::string(value);
       continue;
     }
-    if(string::npos == (pos = oneline.find(':', pos + key.length()))){
+    if (sscanf(token.c_str(), "\"%[^\"]\":%d", key, &stamp) == 2) {
       continue;
     }
-    if(string::npos == (pos = oneline.find('\"', pos))){
-      continue;
-    }
-    oneline = oneline.substr(pos + sizeof(char));
-    if(string::npos == (pos = oneline.find('\"'))){
-      continue;
-    }
-    val = oneline.substr(0, pos);
-    keyval[key] = val;
+    
+    S3FS_PRN_ERR("ParseRAMCredentialResponse badline: %s", token.c_str());
+    return false;   
   }
+
+  char* keys[] ={RAMCRED_ACCESSKEYID, RAMCRED_SECRETACCESSKEY, RAMCRED_ACCESSTOKEN, RAMCRED_EXPIRATION};
+  for (int i =0 ; i < 4; i++) {
+    std::string key(keys[i]);
+    ramcredmap_t::iterator val = keyval.find(key);
+    if (val== keyval.end()) {      
+      S3FS_PRN_ERR("ParseRAMCredentialResponse key not found %s, ", keys[i]);
+      return false;   
+    }
+
+    if (val->second.empty()) {      
+      S3FS_PRN_ERR("ParseRAMCredentialResponse key  %s value is empty ", keys[i]);
+      return false;   
+    }
+  }
+  
   return true;
 }
+
 
 bool S3fsCurl::SetRAMCredentials(const char* response)
 {
@@ -1441,14 +1470,19 @@ bool S3fsCurl::SetRAMCredentials(const char* response)
   if(!ParseRAMCredentialResponse(response, keyval)){
     return false;
   }
-  if(RAMCRED_KEYCOUNT != keyval.size()){
-    return false;
-  }
-
+  
   S3fsCurl::COSAccessKeyId       = keyval[string(RAMCRED_ACCESSKEYID)];
   S3fsCurl::COSSecretAccessKey   = keyval[string(RAMCRED_SECRETACCESSKEY)];
   S3fsCurl::COSAccessToken       = keyval[string(RAMCRED_ACCESSTOKEN)];
   S3fsCurl::COSAccessTokenExpire = cvtCAMExpireStringToTime(keyval[string(RAMCRED_EXPIRATION)].c_str());
+
+  if (S3fsCurl::COSAccessKeyId.empty() || S3fsCurl::COSSecretAccessKey.empty() ||  S3fsCurl::COSAccessToken.empty()){
+    S3FS_PRN_ERR("ParseRAMCredentialResponse error, COSAccessKeyId:%s,COSSecretAccessKey:%s,COSAccessToken:%s",
+          S3fsCurl::COSAccessKeyId.c_str(), 
+          S3fsCurl::COSSecretAccessKey.c_str(),
+          S3fsCurl::COSAccessToken.c_str());
+    return false;     
+  }
 
   return true;
 }
