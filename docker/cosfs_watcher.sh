@@ -19,7 +19,7 @@ count=0
 while true; do
   
   # 获取非 cosfs、非 pause、非 defunct 进程数量
-  non_cosfs_count=$(ps uax | grep -vE -c "/cosfs|sleep |pause|defunct|grep")
+  non_cosfs_count=$(pgrep -v -c -f "UID|/cosfs|sleep|pause|defunct")
  
   # 如果非 cosfs、非 pause、非 defunct 进程数量为 0，则退出循环
   if [ "$non_cosfs_count" -eq 0 ]; then
@@ -40,5 +40,5 @@ done
 
 
 
-kill -s SIGTERM $(ps uax | grep "/cosfs" |grep -v "grep"|awk '{print$2}')
+kill -s SIGTERM $(pgrep cosfs)
 exit 0

@@ -25,7 +25,7 @@ COS_OPTIONS="$COS_OPTIONS -omultipart_size=$MULTIPART_SIZE"
 fi
 
 
-
+restartPolicy=${RESTART_POLICY:-Always}
 if [[ "${restartPolicy}" =~ "Never" ]]; then
   echo "restartPolicy is ${restartPolicy}, kill cosfs when no other process found, to terminal the job normal"
   bash /cosfs_watcher.sh &
