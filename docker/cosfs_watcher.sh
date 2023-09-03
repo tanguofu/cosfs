@@ -1,17 +1,33 @@
 #!/bin/bash 
 
+fmt_error() {
+  printf '%s error: %s\n' "$(date \"+%Y-%m-%d %H:%M:%S\")" "$*" >&2
+}
+
+fmt_info(){
+  printf '%s info: %s\n' "$(date \"+%Y-%m-%d %H:%M:%S\")" "$*" 
+}
+
 # wait cosfs process mount the cos
 for i in {1..3}; do
     is_cosfs_mount=$(df -h |grep cosfs)
 
     if [ -n "$is_cosfs_mount" ]; then 
-        echo "cosfs is mounted"
+        fmt_info "cosfs is mounted"
         break
     fi 
 
-    echo "wait cosfs mount at $i times"
-    sleep 1s
+    fmt_info "wait cosfs mount at $i times"
+    sleep 3s
 done
+
+
+restartPolicy=${RESTART_POLICY:-Always}
+if [[ "${restartPolicy}" =~ "Never" ]] || [[ "${restartPolicy}" =~ "OnFailure" ]] ; then
+  fmt_info "restartPolicy is ${restartPolicy}, kill cosfs when no other process found, to terminal the job normal"
+else
+  exit 0
+fi 
 
 
 # watch main process process runing
@@ -23,21 +39,20 @@ while true; do
  
   # 如果非 cosfs、非 pause、非 defunct 进程数量为 0，则退出循环
   if [ "$non_cosfs_count" -eq 0 ]; then
-    echo "No other process found, this take $count times"
+    fmt_error "No other process found, this take $count times"
     count=$((count+1))
   else
-    echo "There are other process alive, cosfs will working"
+    fmt_info "There are other process alive, cosfs will working"
     count=0     
   fi
 
   if [ $count -eq 6 ]; then
-    echo "No other process found $count times, maybe the other container is dead? i will kill cosfs"
+    fmt_error "No other process found $count times about one minus, maybe the other container is dead? i will kill cosfs"
     break
   fi
 
   sleep 10 
 done
-
 
 
 kill -s SIGTERM $(pgrep cosfs)
