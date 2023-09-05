@@ -3099,7 +3099,7 @@ int S3fsCurl::UploadMultipartPostRequest(const char* tpath, int part_num, string
 	// cos's  no check etag
     // if(NULL != strstr(headdata->str(), upper(partdata.etag).c_str())){
       // get etag from response header
-      S3FS_PRN_ERR("headdata is : %s", headdata->str());
+      // S3FS_PRN_ERR("headdata is : %s", headdata->str());
       string header_str(headdata->str(), headdata->size());
       int pos = header_str.find("ETag: \"");
       if (pos != std::string::npos) {
@@ -3109,7 +3109,7 @@ int S3fsCurl::UploadMultipartPostRequest(const char* tpath, int part_num, string
           } else {
               partdata.etag = header_str.substr(pos + 7, 32);  // ETag get md5 value
           }
-          S3FS_PRN_ERR("partdata.etag : %s", partdata.etag.c_str());
+          // S3FS_PRN_ERR("partdata.etag : %s", partdata.etag.c_str());
       }
       partdata.uploaded = true;
     // }else{

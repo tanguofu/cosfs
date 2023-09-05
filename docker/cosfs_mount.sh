@@ -10,7 +10,7 @@ mkdir -p /cos_tmpfs &&  mount -t tmpfs -o size="${min_memory_mb}"M tmpfs /cos_tm
 
 
 
-COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other -ouse_cache=/cos_tmpfs -odel_cache -odisable_content_md5"
+COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other -ouse_cache=/cos_tmpfs -odel_cache -odisable_content_md5 -oensure_diskfree=128"
 
 if [ -z "$PARALLEL_COUNT" ]; then
 COS_OPTIONS="$COS_OPTIONS -oparallel_count=32 -omultireq_max=32"
