@@ -22,7 +22,28 @@ RUN yum install -y automake gcc-c++ git libcurl-devel libxml2-devel \
 ADD . /cosfs
 
 RUN cd /cosfs && ./autogen.sh && ./configure && make -j
+######################################################################################
 
+FROM mirrors.tencent.com/tlinux/tlinux3.1-minimal:latest as gobuilder
+
+# Envs: append /root/.bashrc instead of ENV docker cmd to make sure all envs take effect.
+ENV PIP_INDEX_URL="https://mirrors.tencent.com/pypi/simple" \
+    PIP_NO_CACHE_DIR=false \
+    PIP_TRUSTED_HOST="mirrors.tencent.com" \
+    PATH=$PATH:/root/bin:/root/.local/bin:/usr/local/bin:/usr/local/go/bin \
+    GOPATH=/root/go \
+    GOHOME=/usr/local/go 
+
+
+RUN dnf install -y yum wget tar gzip gcc-c++ glibc-devel
+
+RUN mkdir -p $GOPATH $GOHOME && \
+    wget -q -O - https://mirrors.aliyun.com/golang/go1.19.13.linux-amd64.tar.gz | tar zxvf - -C /usr/local
+
+ADD ./sidecar /sidecar
+
+RUN cd /sidecar && \
+    go build -ldflags="-w -s " main.go   
 
 
 
@@ -45,6 +66,7 @@ RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime  && echo ${TZ} > /etc/timezo
     yum clean all && rm /var/log/*
 
 COPY --from=builder /cosfs/src/cosfs   /cosfs
+COPY --from=gobuilder /sidecar/main    /sidecar
 
 ADD docker/cosfs_check.sh docker/cosfs_mount.sh docker/cosfs_watcher.sh /
 
