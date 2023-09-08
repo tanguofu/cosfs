@@ -235,7 +235,7 @@ func (r *ContainerdRuntime) List(namespace string, podname string, excludesideca
 			continue
 		}
 
-		log.Infof("found pod container: %s name: %s", container.ID(), containerName)
+		logentry.Infof("found one container in pod")
 		r.containers = append(r.containers, container)
 	}
 

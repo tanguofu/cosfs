@@ -14,7 +14,7 @@ mkdir -p /cos_tmpfs &&  mount -t tmpfs -o size="${min_memory_mb}"M tmpfs /cos_tm
 
 
 
-COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other -ouse_cache=/cos_tmpfs -odel_cache -odisable_content_md5 -oensure_diskfree=128"
+COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other -ouse_cache=/cos_tmpfs -odel_cache -odisable_content_md5 -oensure_diskfree=64"
 
 if [ -z "$PARALLEL_COUNT" ]; then
 COS_OPTIONS="$COS_OPTIONS -oparallel_count=32 -omultireq_max=32"
@@ -31,42 +31,15 @@ fi
 restartPolicy=${RESTART_POLICY:-Always}
 
 if [[ "${restartPolicy}" =~ "Always" ]]; then 
-  COS_OPTIONS="$COS_OPTIONS -f"
+  echo "restartPolicy:$restartPolicy donot check sidecar status"
+else
+  echo "restartPolicy:$restartPolicy start check sidecar status"
+  /cosfs_watcher.sh &
 fi
-
-
-
-
 
 mkdir -p "$MOUNT_PATH"
 if [ -z "$QCLOUD_TMS_CREDENTIALS_URL" ]; then 
-  eval /cosfs "$BUCKET" "$MOUNT_PATH" -ourl="$COS_URL" -opasswd_file="$PASSWD_FILE" "$COS_OPTIONS"
+  eval /cosfs "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -opasswd_file="$PASSWD_FILE" "$COS_OPTIONS"
 else
-  eval /cosfs "$BUCKET" "$MOUNT_PATH" -ourl="$COS_URL" -otmp_credentials_url="$QCLOUD_TMS_CREDENTIALS_URL" "$COS_OPTIONS"
+  eval /cosfs "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -otmp_credentials_url="$QCLOUD_TMS_CREDENTIALS_URL" "$COS_OPTIONS"
 fi
-
-
-if [[ "${restartPolicy}" == "Never" ]] || [[ "${restartPolicy}" == "OnFailure" ]] ; then
-
-# 1. check the other container created
-for i in {1..3}; do
-    is_cosfs_mount=$(df -h |grep cosfs)
-
-    if [ -n "$is_cosfs_mount" ]; then 
-        fmt_info "cosfs is mounted"
-        break
-    fi 
-
-    fmt_info "wait cosfs mount at $i times"
-    sleep 10s
-done
-
-# 2. wait other containers exit 
-/sidecar wait
-
-fi 
-
-
-
-
-exit 0

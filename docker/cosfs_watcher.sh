@@ -8,52 +8,48 @@ fmt_info(){
   printf '%s info: %s\n' "$(date \"+%Y-%m-%d %H:%M:%S\")" "$*" 
 }
 
-# wait cosfs process mount the cos
+# checkout
+is_other_container_start="0"
+
 for i in {1..3}; do
-    is_cosfs_mount=$(df -h |grep cosfs)
+  is_other_container_start=$(/sidecar check |grep -c "found one container in pod")
 
-    if [ -n "$is_cosfs_mount" ]; then 
-        fmt_info "cosfs is mounted"
-        break
-    fi 
+  if [ "$is_other_container_start" -eq 0 ]; then 
+    fmt_info "wait other container start at $i times"
+    sleep 10s
+    
+  fi
 
-    fmt_info "wait cosfs mount at $i times"
-    sleep 3s
+  break
 done
 
-
-restartPolicy=${RESTART_POLICY:-Always}
-if [[ "${restartPolicy}" =~ "Never" ]] || [[ "${restartPolicy}" =~ "OnFailure" ]] ; then
-  fmt_info "restartPolicy is ${restartPolicy}, kill cosfs when no other process found, to terminal the job normal"
+# check again
+is_other_container_start=$(/sidecar check |grep -c "found one container in pod")
+if [ "$is_other_container_start" -eq 0 ]; then 
+  fmt_error "not found other container in pod: $POD_NAMESPACE/$POD_NAME, kill cosfs and exit"
+  kill -s SIGTERM $(pgrep cosfs)
 else
-  exit 0
+  fmt_info "found $is_other_container_start container in pod: $POD_NAMESPACE/$POD_NAME, wait them exit"  
 fi 
 
 
-# watch main process process runing
-count=0
-while true; do
-  
-  # 获取非 cosfs、非 pause、非 defunct 进程数量
-  non_cosfs_count=$(pgrep -v -c -f "UID|/cosfs|sleep|pause|defunct")
- 
-  # 如果非 cosfs、非 pause、非 defunct 进程数量为 0，则退出循环
-  if [ "$non_cosfs_count" -eq 0 ]; then
-    fmt_error "No other process found, this take $count times"
-    count=$((count+1))
-  else
-    fmt_info "There are other process alive, cosfs will working"
-    count=0     
-  fi
+restartPolicy=${RESTART_POLICY:-Always}
+# wait
+while true
+do
 
-  if [ $count -eq 6 ]; then
-    fmt_error "No other process found $count times about one minus, maybe the other container is dead? i will kill cosfs"
-    break
-  fi
+ret=$(/sidecar wait)
+# kill 
+fmt_info "all container in pod: $POD_NAMESPACE/$POD_NAME is exit code: $ret"
 
-  sleep 10 
+if [ "$ret" -eq 0 ] || [ "$restartPolicy" == "Never" ]; then
+  fmt_info "restartPolicy is $restartPolicy and exitcode is $ret  kill cosfs and exit"
+  kill -s SIGTERM $(pgrep cosfs)
+  exit 0
+fi
+
 done
 
 
-kill -s SIGTERM $(pgrep cosfs)
-exit 0
+
+
