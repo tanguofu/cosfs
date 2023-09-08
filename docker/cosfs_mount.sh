@@ -9,12 +9,14 @@ set -e
 # calc min(2GB, Mem/4)
 min_memory_mb=$(grep MemTotal /proc/meminfo | awk '{printf("%.0f", $2 / 1024 / 4)}' | awk '{print ($1 < 2048) ? $1 : 2048}')
 
-# use tmpfs(mem) as cosfs cache
-mkdir -p /cos_tmpfs &&  mount -t tmpfs -o size="${min_memory_mb}"M tmpfs /cos_tmpfs
+COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other  -odisable_content_md5  -odbglevel=warn"
 
-
-
-COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other -ouse_cache=/cos_tmpfs -odel_cache -odisable_content_md5 -oensure_diskfree=64"
+if [ -n "$USE_MEM_CACHE" ]; then
+  mkdir -p /cos_tmpfs && mount -t tmpfs -o size="${min_memory_mb}"M tmpfs /cos_tmpfs
+  COS_OPTIONS="$COS_OPTIONS -ouse_cache=/cos_tmpfs -odel_cache -oensure_diskfree=64"
+else
+  COS_OPTIONS="$COS_OPTIONS -ouse_cache=/tmp -odel_cache -oensure_diskfree=2048"
+fi
 
 if [ -z "$PARALLEL_COUNT" ]; then
 COS_OPTIONS="$COS_OPTIONS -oparallel_count=32 -omultireq_max=32"

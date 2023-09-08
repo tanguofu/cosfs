@@ -1160,7 +1160,7 @@ bool S3fsCurl::UploadMultipartPostCallback(S3fsCurl* s3fscurl)
   // if(NULL == strstr(s3fscurl->headdata->str(), upper(s3fscurl->partdata.etag).c_str())){
   //  return false;
   // }
-  S3FS_PRN_ERR("headdata is : %s", s3fscurl->headdata->str());
+  S3FS_PRN_INFO("headdata is : %s", s3fscurl->headdata->str());
   string header_str(s3fscurl->headdata->str(), s3fscurl->headdata->size());
   size_t pos = header_str.find("ETag: \"");
   if (pos != std::string::npos) {
@@ -1170,7 +1170,7 @@ bool S3fsCurl::UploadMultipartPostCallback(S3fsCurl* s3fscurl)
       } else {
           s3fscurl->partdata.etag = header_str.substr(pos + 7, 32);  // ETag get md5 value
       }
-      S3FS_PRN_ERR("partdata.etag : %s", s3fscurl->partdata.etag.c_str());
+      S3FS_PRN_INFO("partdata.etag : %s", s3fscurl->partdata.etag.c_str());
   }
   s3fscurl->partdata.etaglist->at(s3fscurl->partdata.etagpos).assign(s3fscurl->partdata.etag);
   s3fscurl->partdata.uploaded = true;

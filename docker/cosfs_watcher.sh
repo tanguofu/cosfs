@@ -1,11 +1,11 @@
 #!/bin/bash 
 
 fmt_error() {
-  printf '%s error: %s\n' "$(date \"+%Y-%m-%d %H:%M:%S\")" "$*" >&2
+  printf '%s error: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2
 }
 
 fmt_info(){
-  printf '%s info: %s\n' "$(date \"+%Y-%m-%d %H:%M:%S\")" "$*" 
+  printf '%s info:  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" 
 }
 
 # checkout
@@ -15,39 +15,26 @@ for i in {1..3}; do
   is_other_container_start=$(/sidecar check |grep -c "found one container in pod")
 
   if [ "$is_other_container_start" -eq 0 ]; then 
-    fmt_info "wait other container start at $i times"
-    sleep 10s
-    
+    fmt_info "sleep 10s to wait other container start at $i times"
+    sleep 10s    
   fi
 
+  fmt_info "found $is_other_container_start container in pod: $POD_NAMESPACE/$POD_NAME, wait them exit"
   break
 done
 
-# check again
-is_other_container_start=$(/sidecar check |grep -c "found one container in pod")
-if [ "$is_other_container_start" -eq 0 ]; then 
-  fmt_error "not found other container in pod: $POD_NAMESPACE/$POD_NAME, kill cosfs and exit"
-  kill -s SIGTERM $(pgrep cosfs)
-else
-  fmt_info "found $is_other_container_start container in pod: $POD_NAMESPACE/$POD_NAME, wait them exit"  
-fi 
-
 
 restartPolicy=${RESTART_POLICY:-Always}
-# wait
+# wait 
 while true
 do
 
-ret=$(/sidecar wait)
-# kill 
-fmt_info "all container in pod: $POD_NAMESPACE/$POD_NAME is exit code: $ret"
-
+/sidecar wait; ret=$?
 if [ "$ret" -eq 0 ] || [ "$restartPolicy" == "Never" ]; then
   fmt_info "restartPolicy is $restartPolicy and exitcode is $ret  kill cosfs and exit"
   kill -s SIGTERM $(pgrep cosfs)
   exit 0
 fi
-
 done
 
 
