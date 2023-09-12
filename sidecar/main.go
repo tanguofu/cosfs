@@ -368,7 +368,7 @@ func NewRuntime(containerd string) ContainerRuntime {
 
 	r, err = NewContainerdRuntime(containerd)
 	if err == nil {
-		log.WithField("containerd", containerd).Info("connect docker ok")
+		log.WithField("containerd", containerd).Info("connect containerd ok")
 		return r
 	}
 
