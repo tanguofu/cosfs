@@ -30,11 +30,13 @@ while true
 do
 
 /sidecar wait; ret=$?
+
 if [ "$ret" -eq 0 ] || [ "$restartPolicy" == "Never" ]; then
   fmt_info "restartPolicy is $restartPolicy and exitcode is $ret  kill cosfs and exit"
-  kill -s SIGTERM $(pgrep cosfs)
+  kill -s SIGTERM $(pgrep "cosfs-mount")
   exit 0
 fi
+
 done
 
 

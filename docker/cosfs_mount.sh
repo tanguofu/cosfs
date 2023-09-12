@@ -45,3 +45,5 @@ if [ -z "$QCLOUD_TMS_CREDENTIALS_URL" ]; then
 else
   eval /cosfs "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -otmp_credentials_url="$QCLOUD_TMS_CREDENTIALS_URL" "$COS_OPTIONS"
 fi
+
+exit 0

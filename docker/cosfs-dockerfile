@@ -65,7 +65,7 @@ RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime  && echo ${TZ} > /etc/timezo
     yum install -y fuse fuse-libs procps gawk util-linux nfs-utils && \
     yum clean all && rm -fr /var/log/*
 
-COPY --from=builder /cosfs/src/cosfs   /cosfs
+COPY --from=builder /cosfs/src/cosfs   /cosfs-mount
 COPY --from=gobuilder /sidecar/main    /sidecar
 
 ADD docker/cosfs_check.sh docker/cosfs_mount.sh docker/cosfs_watcher.sh /
