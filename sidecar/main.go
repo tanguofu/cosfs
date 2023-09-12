@@ -48,6 +48,10 @@ func NewDockerRuntime() (*DockerRuntime, error) {
 		return nil, fmt.Errorf("create docker client err: %v", err)
 	}
 
+	if _, err := client.Info(context.Background()); err != nil {
+		return nil, fmt.Errorf("get docker info err: %v", err)
+	}
+
 	return &DockerRuntime{
 		cli:        client,
 		containers: make([]dockertypes.Container, 0),
@@ -184,6 +188,10 @@ func NewContainerdRuntime(containerdep string) (*ContainerdRuntime, error) {
 	client, err := containerd.New(containerdep, containerd.WithDefaultNamespace("k8s.io"))
 	if err != nil || client == nil {
 		return nil, fmt.Errorf("no found containerd server, containerd: %s, err: %v", containerdep, err)
+	}
+
+	if _, err := client.Version(context.Background()); err != nil {
+		return nil, fmt.Errorf("get containerd version err: %v", err)
 	}
 
 	return &ContainerdRuntime{
