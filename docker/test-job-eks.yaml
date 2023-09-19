@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+        ti.cloud.tencent.com/task-type: Training
+        ti.cloud.tencent.com/user-id: "100005348929"
+        ti.cloud.tencent.com/instance-type: TI.S.MEDIUM.POST
+        ti.cloud.tencent.com/region: ap-shanghai
+  labels:
+        ti.cloud.tencent.com/task-type: Training
+        ti.cloud.tencent.com/user-id: "100005348929"
+        ti.cloud.tencent.com/instance-type: TI.S.MEDIUM.POST
+        ti.cloud.tencent.com/region: ap-shanghai
+  name: fio-test-job-eks
+  namespace: train-100005348929
+spec:
+  template:
+    metadata:
+      annotations:
+        ti.cloud.tencent.com/task-type: Training
+        ti.cloud.tencent.com/user-id: "100005348929"
+        ti.cloud.tencent.com/instance-type: TI.S.MEDIUM.POST
+        ti.cloud.tencent.com/region: ap-shanghai
+      labels:
+        ti.cloud.tencent.com/task-type: Training
+        ti.cloud.tencent.com/user-id: "100005348929"
+        ti.cloud.tencent.com/instance-type: TI.S.MEDIUM.POST
+        ti.cloud.tencent.com/region: ap-shanghai
+      name: fio-test-job-eks
+    spec:
+      containers:
+      - name: fio
+        image: ccr.ccs.tencentyun.com/qcloud-ti-platform/cosfs:master-6142a91-20230905
+        command:
+        - /bin/bash
+        - -exc
+        args: 
+        - |
+           yum install -y fio 
+           fio --name=seq-write --ioengine=libaio --iodepth=32 --rw=write --bs=1M --numjobs=1 --size=1G --runtime=60s --time_based --end_fsync=1 --filename=/mnt/cosfs/test
+        volumeMounts:
+        - name:  cos-vol
+          mountPath: /mnt/cosfs
+      restartPolicy: Never
+      imagePullSecrets:
+      - name: ticloudrepo
+      volumes:
+      - name: cos-vol
+        csi:
+          driver: com.tencent.cloud.ti.csi.cos
+          volumeAttributes:
+            bucketname: mingjunz-test-sh-1256580188
+            url: "http://cos.ap-shanghai.myqcloud.com"
+            path: /
+            tiCredURLSecret: "http://9.0.254.244/credentialsxxx"
+
+
