@@ -3,14 +3,30 @@ kind: Job
 metadata:
   annotations:
      ti.cloud.tencent.com/task-type: Training
+     ti.cloud.tencent.com/user-id: "100005348929"
+     ti.cloud.tencent.com/resourcegroup-id: trsg-wwvttkkn
+     ti.cloud.tencent.com/region: ap-shanghai
+  labels:
+     ti.cloud.tencent.com/task-type: Training
+     ti.cloud.tencent.com/user-id: "100005348929"
+     ti.cloud.tencent.com/resourcegroup-id: trsg-wwvttkkn
+     ti.cloud.tencent.com/region: ap-shanghai
   name: fio-test-job
+  namespace: train-100005348929
 spec:
   template:
     metadata:
       annotations:
         ti.cloud.tencent.com/task-type: Training
-        ti.cloud.tencent.com/user-id: "xxx"
-        ti.cloud.tencent.com/resourcegroup-id: xxx
+        ti.cloud.tencent.com/user-id: "100005348929"
+        ti.cloud.tencent.com/resourcegroup-id: trsg-wwvttkkn
+        ti.cloud.tencent.com/region: ap-shanghai
+      labels:
+        ti.cloud.tencent.com/task-type: Training
+        ti.cloud.tencent.com/user-id: "100005348929"
+        ti.cloud.tencent.com/resourcegroup-id: trsg-wwvttkkn
+        ti.cloud.tencent.com/region: ap-shanghai
+      name: fio-test-job
     spec:
       containers:
       - name: fio
@@ -36,4 +52,6 @@ spec:
             bucketname: mingjunz-test-sh-1256580188
             url: "http://cos.ap-shanghai.myqcloud.com"
             path: /
-            tiCredURLSecret: "xxx"
+            tiCredURLSecret: "http://9.0.254.244/credentials/xxx"
+
+
