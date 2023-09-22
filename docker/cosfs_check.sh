@@ -9,8 +9,8 @@ fmt_info(){
 }
 
 # wait cosfs process mount the cos
-for i in {1..3}; do
-    is_cosfs_mount=$(df -h $MOUNT_PATH | grep cosfs)
+for i in {1..12}; do
+    is_cosfs_mount=$(df -h "$MOUNT_PATH" | grep cosfs)
 
     if [ -n "$is_cosfs_mount" ]; then 
         fmt_info "cosfs is mounted"

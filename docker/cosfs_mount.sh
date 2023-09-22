@@ -9,7 +9,7 @@ set -e
 # calc min(2GB, Mem/4)
 min_memory_mb=$(grep MemTotal /proc/meminfo | awk '{printf("%.0f", $2 / 1024 / 4)}' | awk '{print ($1 < 2048) ? $1 : 2048}')
 
-COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other  -odisable_content_md5  -odbglevel=warn"
+COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other  -odisable_content_md5  -odbglevel=warn -ononempty"
 
 if [ -n "$USE_MEM_CACHE" ]; then
   mkdir -p /cos_tmpfs && mount -t tmpfs -o size="${min_memory_mb}"M tmpfs /cos_tmpfs
@@ -33,13 +33,14 @@ fi
 restartPolicy=${RESTART_POLICY:-Always}
 
 if [[ "${restartPolicy}" =~ "Always" ]]; then 
-  echo "restartPolicy:$restartPolicy donot check sidecar status"
+  fmt_info "restartPolicy:$restartPolicy donot check sidecar status"
 else
-  echo "restartPolicy:$restartPolicy start check sidecar status"
+  fmt_info "restartPolicy:$restartPolicy start check sidecar status"
   /cosfs_watcher.sh &
 fi
 
 mkdir -p "$MOUNT_PATH"
+set -x
 if [ -z "$QCLOUD_TMS_CREDENTIALS_URL" ]; then 
   eval /cosfs-mount "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -opasswd_file="$PASSWD_FILE" "$COS_OPTIONS"
 else

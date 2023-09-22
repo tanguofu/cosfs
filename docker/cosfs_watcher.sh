@@ -11,7 +11,7 @@ fmt_info(){
 # checkout
 is_other_container_start="0"
 
-for i in {1..3}; do
+for i in {1..6}; do
   is_other_container_start=$(/sidecar check |grep -c "found one container in pod")
 
   if [ "$is_other_container_start" -eq 0 ]; then 
