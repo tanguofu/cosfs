@@ -42,7 +42,7 @@ mkdir -p "$MOUNT_PATH"
 set -x
 
 # strip \n of the url
-QCLOUD_TMS_CREDENTIALS_URL=${QCLOUD_TMS_CREDENTIALS_URL//'\n'/}
+QCLOUD_TMS_CREDENTIALS_URL=$(echo -n "$QCLOUD_TMS_CREDENTIALS_URL" | tr -d '\n' | tr -d '\r')
 
 if [ -z "$QCLOUD_TMS_CREDENTIALS_URL" ]; then 
   eval /cosfs-mount "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -opasswd_file="$PASSWD_FILE" "$COS_OPTIONS"
