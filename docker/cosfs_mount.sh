@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 fmt_info(){
-  printf '%s info: %s\n' "$(date \"+%Y-%m-%d %H:%M:%S\")" "$*" 
+  printf '%s info: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" 
 }
 
 set -e

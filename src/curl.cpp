@@ -1081,12 +1081,19 @@ bool S3fsCurl::checkSTSCredentialUpdate(void) {
        return false;
    } 
    
-   // update by tmp credentials url   
-   if (S3fsCurl::TmpCredentialsUrl.size() > 0) {      
-      S3fsCurl s3fscurl;
-      if(0 != s3fscurl.GetRAMCredentials()){
-          return false;
-      }
+   // update by tmp credentials url and retry five times every 5 sec.   
+   if (S3fsCurl::TmpCredentialsUrl.size() > 0) {
+    
+     for (int i = 0; i < 5; i++)
+     {
+       S3fsCurl s3fscurl;
+       if (0 == s3fscurl.GetRAMCredentials())
+       {
+         return true;
+       }
+       sleep(5);
+     }
+     return false
    }
    
    return true;
