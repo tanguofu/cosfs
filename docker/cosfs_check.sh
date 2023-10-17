@@ -10,15 +10,18 @@ fmt_info(){
 
 # wait cosfs process mount the cos
 for i in {1..12}; do
-    is_cosfs_mount=$(df -h "$MOUNT_PATH" | grep cosfs)
+    
+    mountpoint "$MOUNT_PATH"
+    is_cosfs_mount=$?
 
-    if [ -n "$is_cosfs_mount" ]; then 
-        fmt_info "cosfs is mounted"
-        break
+    if [ "$is_cosfs_mount" -eq 0 ]; then 
+        fmt_info "$MOUNT_PATH cosfs is mounted, exit check"
+        exit 0
     fi 
 
     fmt_warn "wait cosfs mount at $i times"
     sleep 5s
 done
 
-exit 0
+fmt_warn "$MOUNT_PATH cosfs mount check failed "
+exit 200

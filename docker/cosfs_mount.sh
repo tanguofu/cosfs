@@ -4,8 +4,25 @@ fmt_info(){
   printf '%s info: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" 
 }
 
-set -e
 
+# check mountpoint is already mounted
+info=$(mountpoint "$MOUNT_PATH" 2>&1)
+if [[ "$info" =~ "No such" ]]; then
+  mkdir -p "$MOUNT_PATH"
+  fmt_info "mkdir -p $MOUNT_PATH"
+elif [[ "$info" =~ "Transport endpoint" ]]; then
+  umount "$MOUNT_PATH"
+  fmt_info "umount $MOUNT_PATH"
+elif [[ "$info" =~ "is a mountpoint" ]]; then
+  fmt_info "$MOUNT_PATH already mounted, $(mount|grep "$MOUNT_PATH") exit"
+  exit 0
+else
+  fmt_info "unkown $MOUNT_PATH mount info:$info exit"
+  exit 100
+fi
+
+
+set -e
 COS_OPTIONS="$COS_OPTIONS -ocam_role=sts -oallow_other  -odisable_content_md5  -odbglevel=warn -ononempty"
 
 if [ -n "$USE_MEM_CACHE" ]; then
@@ -14,7 +31,10 @@ if [ -n "$USE_MEM_CACHE" ]; then
   mkdir -p /cos_tmpfs && mount -t tmpfs -o size="${min_memory_mb}"M tmpfs /cos_tmpfs
   COS_OPTIONS="$COS_OPTIONS -ouse_cache=/cos_tmpfs -odel_cache -oensure_diskfree=64"
 else
-  COS_OPTIONS="$COS_OPTIONS -ouse_cache=/tmp -odel_cache -oensure_diskfree=2048"
+  # tmp is shared by all container of pod so use container name to isolation
+  CACAHE_DIR="/tmp/${CONTAINER_NAME:-cosfs}"
+  mkdir -p "CACAHE_DIR"
+  COS_OPTIONS="$COS_OPTIONS -ouse_cache=$CACAHE_DIR -odel_cache -oensure_diskfree=2048"
 fi
 
 if [ -z "$PARALLEL_COUNT" ]; then
@@ -53,7 +73,7 @@ fi
 fmt_info "cosfs-mount exit $?"
 
 # clear mount point
-mountpoint -q "$MOUNT_PATH"
+mountpoint "$MOUNT_PATH"
 if [ $? -eq 0 ]; then  
   umount "$MOUNT_PATH"
   fmt_info "$MOUNT_PATH is mountpoint try to umount and the ret is $?"
