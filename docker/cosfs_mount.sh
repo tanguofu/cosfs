@@ -33,7 +33,7 @@ if [ -n "$USE_MEM_CACHE" ]; then
 else
   # tmp is shared by all container of pod so use container name to isolation
   CACAHE_DIR="/tmp/${CONTAINER_NAME:-cosfs}"
-  mkdir -p "CACAHE_DIR"
+  mkdir -p "$CACAHE_DIR"
   COS_OPTIONS="$COS_OPTIONS -ouse_cache=$CACAHE_DIR -odel_cache -oensure_diskfree=2048"
 fi
 
@@ -58,12 +58,10 @@ else
   /cosfs_watcher.sh &
 fi
 
-mkdir -p "$MOUNT_PATH"
-set -x
 
 # strip \n of the url
-QCLOUD_TMS_CREDENTIALS_URL=$(echo -n "$QCLOUD_TMS_CREDENTIALS_URL" | tr -d '\n' | tr -d '\r')
-
+QCLOUD_TMS_CREDENTIALS_URL=$(echo -n "$QCLOUD_TMS_CREDENTIALS_URL" | tr -d '\n' | tr -d '\r' | tr -d ' ')
+set -x
 if [ -z "$QCLOUD_TMS_CREDENTIALS_URL" ]; then 
   eval /cosfs-mount "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -opasswd_file="$PASSWD_FILE" "$COS_OPTIONS"
 else

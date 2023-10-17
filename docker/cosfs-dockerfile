@@ -57,8 +57,6 @@ ENV TZ=Asia/Shanghai \
     PIP_INDEX_URL="https://mirrors.tencent.com/pypi/simple" \
     PIP_NO_CACHE_DIR=false \
     PIP_TRUSTED_HOST="mirrors.tencent.com" \
-    LC_ALL=zh_CN.UTF-8 \
-    LANG=zh_CN.UTF-8 \
     PATH=$PATH:/root/bin:/root/.local/bin:/usr/local/bin:/tiapp/bin:/host/usr/bin:/host/usr/local/bin
 
 RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime  && echo ${TZ} > /etc/timezone && \
