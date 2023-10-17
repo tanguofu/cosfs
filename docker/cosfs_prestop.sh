@@ -15,7 +15,7 @@ fi
 
 mountpoint -q "$MOUNT_PATH"
 if [ $? -eq 0 ]; then  
-  fusermount -u "$MOUNT_PATH"
+  umount -u "$MOUNT_PATH"
   fmt_warn "fusermount -u $MOUNT_PATH ret:$?"
 fi  
 

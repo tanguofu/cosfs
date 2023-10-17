@@ -50,4 +50,11 @@ else
   eval /cosfs-mount "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -otmp_credentials_url="$QCLOUD_TMS_CREDENTIALS_URL" "$COS_OPTIONS"
 fi
 
+# clear mount point
+mountpoint -q "$MOUNT_PATH"
+if [ $? -eq 0 ]; then  
+  umount "$MOUNT_PATH"
+  fmt_info "umount -u $MOUNT_PATH ret:$?"
+fi
+
 exit 0
