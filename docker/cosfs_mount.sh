@@ -32,7 +32,7 @@ fi
 restartPolicy=${RESTART_POLICY:-Always}
 
 if [[ "${restartPolicy}" =~ "Always" ]]; then 
-  fmt_info "restartPolicy:$restartPolicy donot check sidecar status"
+  fmt_info "restartPolicy:$restartPolicy do not check sidecar status"
 else
   fmt_info "restartPolicy:$restartPolicy start check sidecar status"
   /cosfs_watcher.sh &
@@ -50,11 +50,13 @@ else
   eval /cosfs-mount "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -otmp_credentials_url="$QCLOUD_TMS_CREDENTIALS_URL" "$COS_OPTIONS"
 fi
 
+fmt_info "cosfs-mount exit $?"
+
 # clear mount point
 mountpoint -q "$MOUNT_PATH"
 if [ $? -eq 0 ]; then  
   umount "$MOUNT_PATH"
-  fmt_info "umount -u $MOUNT_PATH ret:$?"
+  fmt_info "$MOUNT_PATH is mountpoint try to umount and the ret is $?"
 fi
 
 exit 0

@@ -18,7 +18,7 @@ for i in {1..12}; do
     fi 
 
     fmt_warn "wait cosfs mount at $i times"
-    sleep 3s
+    sleep 5s
 done
 
 exit 0
