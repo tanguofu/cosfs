@@ -1093,7 +1093,8 @@ bool S3fsCurl::checkSTSCredentialUpdate(void) {
        }
        sleep(5);
      }
-     return false
+     
+     return false;
    }
    
    return true;
