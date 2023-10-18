@@ -6,19 +6,15 @@ fmt_info(){
 
 
 # check mountpoint is already mounted
-info=$(mountpoint "$MOUNT_PATH" 2>&1)
+info=$(df -h "$MOUNT_PATH" 2>&1)
 if [[ "$info" =~ "No such" ]]; then
   mkdir -p "$MOUNT_PATH"
   fmt_info "mkdir -p $MOUNT_PATH"
-elif [[ "$info" =~ "Transport endpoint" ]]; then
+elif [[ "$info" =~ "not connected" ]]; then
   umount "$MOUNT_PATH"
   fmt_info "umount $MOUNT_PATH"
-elif [[ "$info" =~ "is a mountpoint" ]]; then
-  fmt_info "$MOUNT_PATH already mounted, $(mount|grep "$MOUNT_PATH") exit"
-  exit 0
-else
-  fmt_info "unkown $MOUNT_PATH mount info:$info exit"
-  exit 100
+elif [[ "$info" =~ "cosfs-mount" ]]; then 
+  fmt_info "$MOUNT_PATH  is mounted: $info"
 fi
 
 
@@ -74,10 +70,13 @@ set +e
 fmt_info "cosfs-mount exit $?"
 
 # clear mount point
-mountpoint "$MOUNT_PATH"
-if [ $? -eq 0 ]; then  
+info=$(df -h "$MOUNT_PATH" 2>&1)
+if [[ "$info" =~ "not connected" ]]; then
   umount "$MOUNT_PATH"
-  fmt_info "$MOUNT_PATH is mountpoint try to umount and the ret is $?"
+  fmt_info "$info: umount $MOUNT_PATH"
+elif [[ "$info" =~ "cosfs-mount" ]]; then 
+  umount "$MOUNT_PATH"
+  fmt_info "$info: umount $MOUNT_PATH"
 fi
 
 # keep exit code 0 
