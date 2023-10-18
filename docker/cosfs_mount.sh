@@ -81,9 +81,6 @@ info=$(df -h "$MOUNT_PATH" 2>&1)
 if [[ "$info" =~ "not connected" ]]; then
   umount "$MOUNT_PATH"
   fmt_info "$info: umount $MOUNT_PATH"
-elif [[ "$info" =~ "cosfs-mount" ]]; then 
-  umount "$MOUNT_PATH"
-  fmt_info "$info: umount $MOUNT_PATH"
 fi
 
 # keep exit code 0 
