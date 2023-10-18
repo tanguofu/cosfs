@@ -12,7 +12,13 @@ if [[ "$info" =~ "No such" ]]; then
   fmt_info "mkdir -p $MOUNT_PATH"
 elif [[ "$info" =~ "not connected" ]]; then
   umount "$MOUNT_PATH"
-  fmt_info "umount $MOUNT_PATH"
+  ret=$?
+  if [ $? -ne 0 ]; then
+    umount -f "$MOUNT_PATH"
+    ret=$?
+  fi
+  fmt_info "$MOUNT_PATH is not connected: $info, umount it ret:$?"
+  
 elif [[ "$info" =~ "cosfs-mount" ]]; then 
   fmt_info "$MOUNT_PATH  is mounted: $info"
 fi
