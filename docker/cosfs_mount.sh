@@ -63,11 +63,12 @@ if [ -z "$QCLOUD_TMS_CREDENTIALS_URL" ]; then
 else
   eval /cosfs-mount "$BUCKET" -f "$MOUNT_PATH" -ourl="$COS_URL" -otmp_credentials_url="$QCLOUD_TMS_CREDENTIALS_URL" "$COS_OPTIONS"
 fi
+ret=$?
 
 set +x
 set +e 
 
-fmt_info "cosfs-mount exit $?"
+fmt_info "cosfs-mount exit $ret"
 
 # clear mount point
 info=$(df -h "$MOUNT_PATH" 2>&1)
