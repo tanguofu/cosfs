@@ -11,10 +11,8 @@ if [[ "$info" =~ "No such" ]]; then
   mkdir -p "$MOUNT_PATH"
   fmt_info "mkdir -p $MOUNT_PATH"
 elif [[ "$info" =~ "not connected" ]]; then
-  #umount "$MOUNT_PATH"
-  #ret=$?
+  fusermount -u "$MOUNT_PATH"
   fmt_info "$MOUNT_PATH is not connected: $info"
-  
 elif [[ "$info" =~ "cosfs-mount" ]]; then 
   fmt_info "$MOUNT_PATH  is mounted: $info"
 fi
@@ -75,6 +73,7 @@ fmt_info "cosfs-mount exit $ret"
 # clear mount point
 info=$(df -h "$MOUNT_PATH" 2>&1)
 if [[ "$info" =~ "not connected" ]]; then
+  fusermount -u "$MOUNT_PATH"
   fmt_info "$MOUNT_PATH is not connected: $info"
 fi
 
